@@ -6,7 +6,7 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface NewsDataSource {
+interface NewsApiServices {
     companion object {
         private const val SIZE_TO_REQUEST = 7
     }

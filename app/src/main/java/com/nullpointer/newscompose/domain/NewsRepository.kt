@@ -1,6 +1,5 @@
 package com.nullpointer.newscompose.domain
 
-import com.nullpointer.newscompose.models.NewsApi
 import com.nullpointer.newscompose.models.NewsDB
 import kotlinx.coroutines.flow.Flow
 

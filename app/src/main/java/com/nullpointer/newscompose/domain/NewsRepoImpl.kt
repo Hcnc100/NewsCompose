@@ -1,43 +1,43 @@
 package com.nullpointer.newscompose.domain
 
-import com.nullpointer.newscompose.data.local.NewsDao
-import com.nullpointer.newscompose.data.remote.NewsDataSource
+import com.nullpointer.newscompose.data.local.NewsLocalDataSource
+import com.nullpointer.newscompose.data.remote.NewsRemoteDataSource
 import com.nullpointer.newscompose.models.NewsDB
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class NewsRepoImpl @Inject constructor(
-    private val newsDataSource: NewsDataSource,
-    private val newsDao: NewsDao,
+    private val newsRemoteDataSource: NewsRemoteDataSource,
+    private val newsLocalDataSource: NewsLocalDataSource
 ) : NewsRepository {
 
 
     override val listNews: Flow<List<NewsDB>> =
-        newsDao.getAllNews()
+        newsLocalDataSource.listNews
 
     override suspend fun requestNews(country: String): Int {
-        val apiResponse = newsDataSource.topHeadLines(country, 1).body()
+        val apiResponse = newsRemoteDataSource.getLastNews(country, 1).body()
         if (apiResponse!!.status == "error") throw ApiException(apiResponse.code)
         val listNewsDB = apiResponse.articles.map(NewsDB::fromApiNew)
         // * deleter all news saved
         // * and save the news for request only if the news received is no empty
-        if (listNewsDB.isNotEmpty()) newsDao.updateAllNews(listNewsDB)
+        if (listNewsDB.isNotEmpty()) newsLocalDataSource.updateAllNews(listNewsDB)
         return listNewsDB.size
     }
 
     override suspend fun concatenateNews(country: String, intPager: Int): Int {
-        val apiResponse = newsDataSource.topHeadLines(country, intPager).body()
+        val apiResponse = newsRemoteDataSource.getLastNews(country, intPager).body()
         if (apiResponse!!.status == "error") throw ApiException(apiResponse.code)
         val listNewsDB = apiResponse.articles.map(NewsDB::fromApiNew)
         // ? add new news only
-        if (listNewsDB.isNotEmpty()) newsDao.addNews(listNewsDB)
+        if (listNewsDB.isNotEmpty()) newsLocalDataSource.addListNews(listNewsDB)
         return listNewsDB.size
     }
 
     override suspend fun getNew(title: String): NewsDB? =
-        newsDao.getNewFromTitle(title)
+        newsLocalDataSource.getNewFromTitle(title)
 
     override suspend fun deleterAllNews() =
-        newsDao.deleterAllNews()
+        newsLocalDataSource.deleterAllNews()
 }
 
