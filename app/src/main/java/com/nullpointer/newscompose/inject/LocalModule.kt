@@ -2,9 +2,11 @@ package com.nullpointer.newscompose.inject
 
 import android.content.Context
 import androidx.room.Room
-import com.nullpointer.newscompose.data.local.NewsDao
-import com.nullpointer.newscompose.data.local.NewsDatabase
-import com.nullpointer.newscompose.data.local.NewsLocalDataSource
+import com.nullpointer.newscompose.data.local.datasource.NewsLocalDataSource
+import com.nullpointer.newscompose.data.local.room.NewsDao
+import com.nullpointer.newscompose.data.local.room.NewsDatabase
+import com.nullpointer.newscompose.data.local.datasource.NewsLocalDataSourceImpl
+import com.nullpointer.newscompose.data.remote.NewsRemoteDataSourceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +38,6 @@ object LocalModule {
     @Singleton
     fun provideMovieLocalDataSource(
         newsDao: NewsDao
-    ):NewsLocalDataSource = NewsLocalDataSource(newsDao)
+    ): NewsLocalDataSource = NewsLocalDataSourceImpl(newsDao)
 
 }

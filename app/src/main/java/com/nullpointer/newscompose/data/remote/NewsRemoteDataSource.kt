@@ -1,7 +1,7 @@
 package com.nullpointer.newscompose.data.remote
 
-class NewsRemoteDataSource(
-    private val newsApiServices: NewsApiServices
-) {
-    suspend fun getLastNews(country:String,page:Int) = newsApiServices.topHeadLines(country,page)
+import com.nullpointer.newscompose.models.NewsDB
+
+interface NewsRemoteDataSource {
+    suspend fun getLastNews(country: String,page:Int):List<NewsDB>
 }

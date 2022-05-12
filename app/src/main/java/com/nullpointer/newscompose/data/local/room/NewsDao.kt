@@ -1,4 +1,4 @@
-package com.nullpointer.newscompose.data.local
+package com.nullpointer.newscompose.data.local.room
 
 import androidx.room.*
 import com.nullpointer.newscompose.models.NewsDB

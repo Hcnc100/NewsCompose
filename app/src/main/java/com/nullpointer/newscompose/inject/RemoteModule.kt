@@ -2,6 +2,7 @@ package com.nullpointer.newscompose.inject
 
 import com.nullpointer.newscompose.data.remote.NewsApiServices
 import com.nullpointer.newscompose.data.remote.NewsRemoteDataSource
+import com.nullpointer.newscompose.data.remote.NewsRemoteDataSourceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,5 +41,5 @@ object RemoteModule {
     @Singleton
     fun provideNewsRemoteDataSource(
         newsApiServices: NewsApiServices,
-    ): NewsRemoteDataSource = NewsRemoteDataSource(newsApiServices)
+    ): NewsRemoteDataSource = NewsRemoteDataSourceImpl(newsApiServices)
 }

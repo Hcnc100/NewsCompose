@@ -1,7 +1,9 @@
 package com.nullpointer.newscompose.domain
 
-import com.nullpointer.newscompose.data.local.NewsLocalDataSource
+import com.nullpointer.newscompose.data.local.datasource.NewsLocalDataSource
+import com.nullpointer.newscompose.data.local.datasource.NewsLocalDataSourceImpl
 import com.nullpointer.newscompose.data.remote.NewsRemoteDataSource
+import com.nullpointer.newscompose.data.remote.NewsRemoteDataSourceImpl
 import com.nullpointer.newscompose.models.NewsDB
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -16,9 +18,7 @@ class NewsRepoImpl @Inject constructor(
         newsLocalDataSource.listNews
 
     override suspend fun requestNews(country: String): Int {
-        val apiResponse = newsRemoteDataSource.getLastNews(country, 1).body()
-        if (apiResponse!!.status == "error") throw ApiException(apiResponse.code)
-        val listNewsDB = apiResponse.articles.map(NewsDB::fromApiNew)
+        val listNewsDB = newsRemoteDataSource.getLastNews(country,1)
         // * deleter all news saved
         // * and save the news for request only if the news received is no empty
         if (listNewsDB.isNotEmpty()) newsLocalDataSource.updateAllNews(listNewsDB)
@@ -26,9 +26,7 @@ class NewsRepoImpl @Inject constructor(
     }
 
     override suspend fun concatenateNews(country: String, intPager: Int): Int {
-        val apiResponse = newsRemoteDataSource.getLastNews(country, intPager).body()
-        if (apiResponse!!.status == "error") throw ApiException(apiResponse.code)
-        val listNewsDB = apiResponse.articles.map(NewsDB::fromApiNew)
+        val listNewsDB = newsRemoteDataSource.getLastNews(country,intPager)
         // ? add new news only
         if (listNewsDB.isNotEmpty()) newsLocalDataSource.addListNews(listNewsDB)
         return listNewsDB.size
