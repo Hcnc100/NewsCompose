@@ -37,5 +37,14 @@ in NewsViewModel. "mx" is from mexico.
 
 You cant see another code contry in https://newsapi.org/docs/endpoints/top-headlines in *country*
 
+## Screenshots
+### Splash
+<p>
+  <img src="https://i.imgur.com/9Ozjgr7.png" alt="splash" width="200"/>
+</p>
 
-### Screenshots
+### MainScreen
+<p>
+  <img src="https://i.imgur.com/ygIvEqL.png" alt="main" width="200"/>
+  <img src="https://i.imgur.com/Ys6Iy4Z.png" alt="webview" width="200"/>
+</p>
