@@ -9,7 +9,6 @@ import java.util.*
 
 @Entity(
     tableName = "table_news",
-    indices = [Index(value = ["title", "timestamp"], unique = true)]
 )
 data class NewsDB(
     val title: String,

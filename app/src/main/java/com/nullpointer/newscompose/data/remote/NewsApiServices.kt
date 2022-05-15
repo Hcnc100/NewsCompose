@@ -8,7 +8,7 @@ import retrofit2.http.Query
 
 interface NewsApiServices {
     companion object {
-        private const val SIZE_TO_REQUEST = 7
+        private const val SIZE_TO_REQUEST = 10
     }
 
     // * every call to api limit result to 10 results

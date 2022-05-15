@@ -29,7 +29,7 @@ fun ItemNew(
     actionClick: (url: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val painter = rememberImagePainter(new.urlImg) {
+    val painter = rememberImagePainter(new.urlImg?:R.drawable.ic_news) {
         crossfade(true)
         placeholder(R.drawable.ic_image)
         error(R.drawable.ic_hide_image)
