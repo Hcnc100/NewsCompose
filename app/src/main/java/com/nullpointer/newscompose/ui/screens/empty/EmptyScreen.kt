@@ -15,8 +15,9 @@ import com.nullpointer.newscompose.ui.share.LottieContainer
 fun EmptyScreen(
     @RawRes resourceRaw: Int,
     emptyText: String,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize()) {
         LottieContainer(
             animation = resourceRaw,
             modifier = Modifier

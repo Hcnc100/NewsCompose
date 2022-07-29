@@ -9,8 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.nullpointer.newscompose.R
 import com.nullpointer.newscompose.core.delegates.SavableComposeState
 import com.nullpointer.newscompose.core.utils.InternetCheckError
+import com.nullpointer.newscompose.core.utils.Resource
 import com.nullpointer.newscompose.core.utils.ServerTimeOut
 import com.nullpointer.newscompose.domain.NewsRepository
+import com.nullpointer.newscompose.models.NewsDB
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -46,13 +48,18 @@ class NewsViewModel @Inject constructor(
     var numberPager by SavableComposeState(stateHandle, KEY_NUMBER_PAGER, 1)
         private set
 
-    val listNews = newsRepo.listNews.catch {
-        Timber.e("Error al obtener la lista de noticias $it")
-        emit(emptyList())
+    val listNews = flow<Resource<List<NewsDB>>> {
+        newsRepo.listNews.collect{
+            emit(Resource.Success(it))
+            isEnableConcatenate = true
+        }
+    }.catch {
+        Timber.e("Error get news from database $it")
+        emit(Resource.Failure)
     }.flowOn(Dispatchers.IO).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
-        null)
+        Resource.Failure)
 
 
     init {
@@ -68,7 +75,6 @@ class NewsViewModel @Inject constructor(
                 Timber.d("Se obtuvieron $numberNews noticia(s) al primer request")
                 isEnableConcatenate = true
                 numberPager = 1
-
             } catch (e: Exception) {
                 when (e) {
                     is CancellationException -> throw e
@@ -76,7 +82,7 @@ class NewsViewModel @Inject constructor(
                     is ServerTimeOut -> _messageNews.trySend(R.string.server_time_out)
                     is NullPointerException -> _messageNews.trySend(R.string.server_response_null)
                     else -> {
-                        Timber.e("Error desconocido en la peticion $e")
+                        Timber.e("Unknown error $e")
                         _messageNews.trySend(R.string.error_unknown)
                     }
                 }

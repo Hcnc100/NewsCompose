@@ -1,7 +1,6 @@
 package com.nullpointer.newscompose.models
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,7 +17,7 @@ data class NewsDB(
     var urlNew: String,
     val timestamp: Long,
     @PrimaryKey(autoGenerate = true)
-    val id: Long? = null,
+    val id: Long = 0,
 ) {
     companion object {
         fun fromApiNew(newsApi: NewsApi): NewsDB {

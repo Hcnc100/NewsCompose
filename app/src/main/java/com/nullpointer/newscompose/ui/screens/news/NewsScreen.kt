@@ -1,122 +1,127 @@
 package com.nullpointer.newscompose.ui.screens.news
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.imageLoader
 import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.nullpointer.newscompose.R
+import com.nullpointer.newscompose.core.utils.Resource
+import com.nullpointer.newscompose.models.NewsDB
 import com.nullpointer.newscompose.presentation.NewsViewModel
 import com.nullpointer.newscompose.ui.screens.destinations.WebViewScreenDestination
 import com.nullpointer.newscompose.ui.screens.empty.EmptyScreen
 import com.nullpointer.newscompose.ui.screens.news.componets.ItemNew
 import com.nullpointer.newscompose.ui.screens.news.componets.ItemNewShimmer
+import com.nullpointer.newscompose.ui.share.CircularProgressAnimation
 import com.nullpointer.newscompose.ui.share.OnBottomReached
 import com.nullpointer.newscompose.ui.share.ToolbarBack
+import com.nullpointer.newscompose.ui.states.NewsScreenState
+import com.nullpointer.newscompose.ui.states.rememberNewsScreenState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
-@OptIn(ExperimentalFoundationApi::class)
+
 @Destination(start = true)
 @Composable
 fun NewsScreen(
-    newsViewModel: NewsViewModel = hiltViewModel(),
     navigator: DestinationsNavigator,
+    newsViewModel: NewsViewModel = hiltViewModel(),
+    newsScreenState: NewsScreenState = rememberNewsScreenState(newsViewModel.isRequested)
 ) {
-    val stateNews = newsViewModel.listNews.collectAsState()
-    val listGridState = rememberLazyGridState()
-    val context = LocalContext.current
-    val messageNew = newsViewModel.messageNews
-    val stateScaffold = rememberScaffoldState()
+    val stateNews by newsViewModel.listNews.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
-        messageNew.collect {
-            stateScaffold.snackbarHostState.showSnackbar(context.getString(it))
-        }
+        newsViewModel.messageNews.collect(newsScreenState::showSnackMessage)
     }
 
     Scaffold(
-        scaffoldState = stateScaffold,
-        topBar = {
-            ToolbarBack(title = stringResource(id = R.string.app_name))
-        }
-    ) { it ->
-        val listNews = stateNews.value
+        scaffoldState = newsScreenState.scaffoldState,
+        topBar = { ToolbarBack(title = stringResource(id = R.string.app_name)) }
+    ) { paddingValues ->
         SwipeRefresh(
-            state = rememberSwipeRefreshState(isRefreshing = newsViewModel.isRequested),
-            onRefresh = {
-                newsViewModel.requestLastNews()
-                val imageLoader = context.imageLoader
-                imageLoader.memoryCache.clear()
-            },
-            modifier = Modifier.padding(it)
+            state = newsScreenState.swipeState,
+            onRefresh = newsViewModel::requestLastNews,
+            modifier = Modifier.padding(paddingValues)
         ) {
-            when {
-                listNews == null -> {
-                    LazyVerticalGrid(columns = GridCells.Adaptive(250.dp)) {
-                        items(10) {
-                            ItemNewShimmer()
-                        }
+            when (val stateNews = stateNews) {
+                is Resource.Success -> {
+                    if (stateNews.data.isEmpty()) {
+                        EmptyScreen(
+                            resourceRaw = R.raw.news,
+                            emptyText = stringResource(R.string.message_empty_news),
+                            modifier = Modifier.padding(paddingValues)
+                        )
+                    } else {
+                        ListNews(
+                            listNews = stateNews.data,
+                            modifier = Modifier.padding(paddingValues),
+                            isConcatenate = newsViewModel.isConcatenate,
+                            listGridState = newsScreenState.lazyGridState,
+                            requestMoreNews = newsViewModel::concatenateNews,
+                            clickNew = { navigator.navigate(WebViewScreenDestination(it)) },
+                        )
                     }
                 }
-
-                listNews.isEmpty() -> {
-                    EmptyScreen(resourceRaw = R.raw.news,
-                        emptyText = stringResource(R.string.message_empty_news))
-                }
-
-                listNews.isNotEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        LazyVerticalGrid(columns = GridCells.Adaptive(250.dp),
-                            state = listGridState) {
-                            items(listNews.size,
-                                key = { index -> listNews[index].id!! }) { index ->
-                                ItemNew(
-                                    new = listNews[index],
-                                    modifier = Modifier.animateItemPlacement(),
-                                    actionClick = {
-                                        navigator.navigate(
-                                            WebViewScreenDestination.invoke(it)
-                                        )
-                                    }
-                                )
-                            }
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(250.dp),
+                        modifier = Modifier.padding(paddingValues)
+                    ) {
+                        items(10, key = { it }) {
+                            ItemNewShimmer()
                         }
-                        if (newsViewModel.isEnableConcatenate && !newsViewModel.isRequested)
-                            listGridState.OnBottomReached(onLoadMore = newsViewModel::concatenateNews)
-                        if (newsViewModel.isConcatenate)
-                            Box(modifier = Modifier
-                                .padding(10.dp)
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .align(Alignment.BottomCenter),
-                                contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
                     }
                 }
             }
         }
     }
 }
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ListNews(
+    listGridState: LazyGridState,
+    listNews: List<NewsDB>,
+    isConcatenate: Boolean,
+    requestMoreNews: () -> Unit,
+    clickNew: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(250.dp),
+            state = listGridState
+        ) {
+            items(listNews, key = { it.id }) { new ->
+                ItemNew(
+                    new = new,
+                    modifier = Modifier.animateItemPlacement(),
+                    actionClick = clickNew
+                )
+            }
+        }
+        listGridState.OnBottomReached(onLoadMore = requestMoreNews)
+        CircularProgressAnimation(
+            isVisible = isConcatenate,
+            modifier = Modifier.align(
+                Alignment.BottomCenter
+            )
+        )
+    }
+}
+
