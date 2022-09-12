@@ -41,7 +41,10 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 fun NewsScreen(
     navigator: DestinationsNavigator,
     newsViewModel: NewsViewModel = hiltViewModel(),
-    newsScreenState: NewsScreenState = rememberNewsScreenState(newsViewModel.isRequested)
+    newsScreenState: NewsScreenState = rememberNewsScreenState(
+        isRefreshing = newsViewModel.isRequested,
+        sizeScrollMore = 50f
+    )
 ) {
     val stateNews by newsViewModel.listNews.collectAsState()
 
@@ -72,7 +75,9 @@ fun NewsScreen(
                             modifier = Modifier.padding(paddingValues),
                             isConcatenate = newsViewModel.isConcatenate,
                             listGridState = newsScreenState.lazyGridState,
-                            requestMoreNews = newsViewModel::concatenateNews,
+                            requestMoreNews = {
+                                newsViewModel.concatenateNews(newsScreenState::animateScrollMore)
+                            },
                             clickNew = { navigator.navigate(WebViewScreenDestination(it)) },
                         )
                     }

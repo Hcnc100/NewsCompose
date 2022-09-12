@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nullpointer.newscompose.core.delegates.SavableComposeState
+import com.nullpointer.newscompose.core.delegates.SavableProperty
 import com.nullpointer.newscompose.core.utils.ExceptionManager
 import com.nullpointer.newscompose.core.utils.Resource
 import com.nullpointer.newscompose.core.utils.launchSafeIO
@@ -43,8 +44,7 @@ class NewsViewModel @Inject constructor(
     var isConcatenate by mutableStateOf(false)
         private set
 
-    var isEnableConcatenate by SavableComposeState(stateHandle, KEY_IS_ENABLE_CONCATENATE, true)
-        private set
+    private var isEnableConcatenate by SavableProperty(stateHandle, KEY_IS_ENABLE_CONCATENATE, true)
 
     var numberPager by SavableComposeState(stateHandle, KEY_NUMBER_PAGER, 1)
         private set
@@ -88,25 +88,32 @@ class NewsViewModel @Inject constructor(
     }
 
 
-    fun concatenateNews() {
+    fun concatenateNews(
+        callbackSuccess: () -> Unit
+    ) {
         jobConcatenate?.cancel()
-        jobRequestNews = launchSafeIO(
-            blockBefore = { isRequested = true },
-            blockAfter = { isRequested = false },
-            blockIO = {
-                val numberNews = newsRepo.concatenateNews("mx", numberPager + 1)
-                Timber.d("Se obtuvieron $numberNews noticia(s) nuevas")
-                withContext(Dispatchers.Main) {
-                    numberPager++
-                    if (numberNews == 0) isEnableConcatenate = false
+        if (isEnableConcatenate)
+            jobRequestNews = launchSafeIO(
+                blockBefore = { isConcatenate = true },
+                blockAfter = { isConcatenate = false },
+                blockIO = {
+                    val numberNews = newsRepo.concatenateNews("mx", numberPager + 1)
+                    Timber.d("Se obtuvieron $numberNews noticia(s) nuevas")
+                    withContext(Dispatchers.Main) {
+                        numberPager++
+                        if (numberNews == 0) isEnableConcatenate = false
+                        callbackSuccess()
+                    }
+                },
+                blockException = {
+                    val message =
+                        ExceptionManager.getMessageForException(
+                            it,
+                            "Exception get concatenate news"
+                        )
+                    _messageNews.trySend(message)
                 }
-            },
-            blockException = {
-                val message =
-                    ExceptionManager.getMessageForException(it, "Exception get concatenate news")
-                _messageNews.trySend(message)
-            }
-        )
+            )
     }
 
 }

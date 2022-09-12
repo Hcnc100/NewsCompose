@@ -17,6 +17,3 @@ object InternetCheck {
         }
     }
 }
-
-class InternetCheckError:Exception("No internet connection")
-class ServerTimeOut:Exception("Server timeout")
