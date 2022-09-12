@@ -23,5 +23,5 @@ interface NewsApiServices {
     suspend fun topHeadLines(
         @Query("country") country:String,
         @Query("page") page:Int
-    ):Response<NewApiResponse>
+    ):NewApiResponse
 }
