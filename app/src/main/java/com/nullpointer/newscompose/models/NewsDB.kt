@@ -18,22 +18,4 @@ data class NewsDB(
     val timestamp: Long,
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-) {
-    companion object {
-        fun fromApiNew(newsApi: NewsApi): NewsDB {
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).apply {
-                timeZone = TimeZone.getTimeZone("Zulu")
-            }
-            val date = dateFormat.parse(newsApi.publishedAt)
-            val millis = date?.time ?: System.currentTimeMillis()
-            return NewsDB(
-                title = newsApi.title,
-                description = newsApi.description,
-                author = newsApi.author,
-                urlImg = newsApi.urlToImage,
-                urlNew = newsApi.url,
-                timestamp = millis
-            )
-        }
-    }
-}
+)

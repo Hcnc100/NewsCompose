@@ -5,10 +5,9 @@
     <string name="server_time_out">Server not responding, try again</string>
     <string name="error_unknown">Unknown error</string>
     <string name="description_arrow_back">Return to the previous screen</string>
-    <string name="server_response_null">Error with server response</string>
+    <string name="server_response_null">The server did not respond, try again</string>
     <string name="message_empty_news">Loading news …</string>
     <string name="description_img_new">Image of the current news</string>
-
     <string name="error_no_more_requets">Too many requests, please try again later</string>
     <string name="error_internal_server">There is an error with the server</string>
 </resources>

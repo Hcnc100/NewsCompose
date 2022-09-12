@@ -4,7 +4,7 @@
     <string name="server_time_out">El servidor no responde, reintente</string>
     <string name="error_unknown">Error desconocido</string>
     <string name="description_arrow_back">Regresa a la pantalla anterior</string>
-    <string name="server_response_null">Error con la respuesta del servidor</string>
+    <string name="server_response_null">El servidor no response, reintente</string>
     <string name="message_empty_news">Cargando noticias …</string>
     <string name="description_img_new">Imagen de la noticia actual</string>
     <string name="title_web_view_screen" translatable="false">WebView</string>

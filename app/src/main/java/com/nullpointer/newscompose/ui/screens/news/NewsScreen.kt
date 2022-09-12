@@ -61,36 +61,53 @@ fun NewsScreen(
             onRefresh = newsViewModel::requestLastNews,
             modifier = Modifier.padding(paddingValues)
         ) {
-            when (val stateNews = stateNews) {
-                is Resource.Success -> {
-                    if (stateNews.data.isEmpty()) {
-                        EmptyScreen(
-                            resourceRaw = R.raw.news,
-                            emptyText = stringResource(R.string.message_empty_news),
-                            modifier = Modifier.padding(paddingValues)
-                        )
-                    } else {
-                        ListNews(
-                            listNews = stateNews.data,
-                            modifier = Modifier.padding(paddingValues),
-                            isConcatenate = newsViewModel.isConcatenate,
-                            listGridState = newsScreenState.lazyGridState,
-                            requestMoreNews = {
-                                newsViewModel.concatenateNews(newsScreenState::animateScrollMore)
-                            },
-                            clickNew = { navigator.navigate(WebViewScreenDestination(it)) },
-                        )
-                    }
-                }
-                else -> {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(250.dp),
-                        modifier = Modifier.padding(paddingValues)
-                    ) {
-                        items(10, key = { it }) {
-                            ItemNewShimmer()
-                        }
-                    }
+            ListNewsState(
+                listNewsState = stateNews,
+                modifier = Modifier.padding(paddingValues),
+                isConcatenate = newsViewModel.isConcatenate,
+                listGridState = newsScreenState.lazyGridState,
+                clickDetailsNew = { navigator.navigate(WebViewScreenDestination(it)) },
+                requestMoreNews = { newsViewModel.concatenateNews(newsScreenState::animateScrollMore) }
+            )
+        }
+    }
+}
+
+@Composable
+fun ListNewsState(
+    listNewsState: Resource<List<NewsDB>>,
+    clickDetailsNew: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    isConcatenate: Boolean,
+    requestMoreNews: () -> Unit,
+    listGridState: LazyGridState,
+) {
+    when (listNewsState) {
+        is Resource.Success -> {
+            if (listNewsState.data.isEmpty()) {
+                EmptyScreen(
+                    resourceRaw = R.raw.news,
+                    emptyText = stringResource(R.string.message_empty_news),
+                    modifier = modifier
+                )
+            } else {
+                ListNews(
+                    modifier = modifier,
+                    clickNew = clickDetailsNew,
+                    listNews = listNewsState.data,
+                    isConcatenate = isConcatenate,
+                    listGridState = listGridState,
+                    requestMoreNews = requestMoreNews,
+                )
+            }
+        }
+        else -> {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(250.dp),
+                modifier = modifier
+            ) {
+                items(10, key = { it }) {
+                    ItemNewShimmer()
                 }
             }
         }
@@ -120,7 +137,6 @@ private fun ListNews(
                 )
             }
         }
-        listGridState.OnBottomReached(onLoadMore = requestMoreNews)
         CircularProgressAnimation(
             isVisible = isConcatenate,
             modifier = Modifier.align(
@@ -128,5 +144,7 @@ private fun ListNews(
             )
         )
     }
+
+    listGridState.OnBottomReached(onLoadMore = requestMoreNews)
 }
 
