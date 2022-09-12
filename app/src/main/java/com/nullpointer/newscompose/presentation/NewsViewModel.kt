@@ -6,17 +6,18 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nullpointer.newscompose.R
 import com.nullpointer.newscompose.core.delegates.SavableComposeState
-import com.nullpointer.newscompose.core.utils.InternetCheckError
+import com.nullpointer.newscompose.core.utils.ExceptionManager
 import com.nullpointer.newscompose.core.utils.Resource
-import com.nullpointer.newscompose.core.utils.ServerTimeOut
+import com.nullpointer.newscompose.core.utils.launchSafeIO
 import com.nullpointer.newscompose.domain.NewsRepository
 import com.nullpointer.newscompose.models.NewsDB
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -68,58 +69,44 @@ class NewsViewModel @Inject constructor(
 
     fun requestLastNews() {
         jobRequestNews?.cancel()
-        jobRequestNews = viewModelScope.launch {
-            isRequested = true
-            try {
-                val numberNews = withContext(Dispatchers.IO) { newsRepo.requestNews("mx") }
+        jobRequestNews = launchSafeIO(
+            blockBefore = { isRequested = true },
+            blockAfter = { isRequested = false },
+            blockIO = {
+                val numberNews = newsRepo.requestNews("mx")
                 Timber.d("Se obtuvieron $numberNews noticia(s) al primer request")
-                isEnableConcatenate = true
-                numberPager = 1
-            } catch (e: Exception) {
-                when (e) {
-                    is CancellationException -> throw e
-                    is InternetCheckError -> _messageNews.trySend(R.string.error_network)
-                    is ServerTimeOut -> _messageNews.trySend(R.string.server_time_out)
-                    is NullPointerException -> _messageNews.trySend(R.string.server_response_null)
-                    else -> {
-                        Timber.e("Unknown error $e")
-                        _messageNews.trySend(R.string.error_unknown)
-                    }
+                withContext(Dispatchers.Main) {
+                    isEnableConcatenate = true
+                    numberPager = 1
                 }
-            } finally {
-                isRequested = false
+            },
+            blockException = {
+                val message = ExceptionManager.getMessageForException(it, "Exception get news")
+                _messageNews.trySend(message)
             }
-        }
+        )
     }
 
 
     fun concatenateNews() {
         jobConcatenate?.cancel()
-        jobConcatenate = viewModelScope.launch {
-            isConcatenate = true
-            try {
-                numberPager++
-                val numberNews = withContext(Dispatchers.IO) {
-                    newsRepo.concatenateNews("mx", numberPager)
-                }
+        jobRequestNews = launchSafeIO(
+            blockBefore = { isRequested = true },
+            blockAfter = { isRequested = false },
+            blockIO = {
+                val numberNews = newsRepo.concatenateNews("mx", numberPager + 1)
                 Timber.d("Se obtuvieron $numberNews noticia(s) nuevas")
-                if (numberNews == 0) isEnableConcatenate = false
-            } catch (e: Exception) {
-                numberPager--
-                when (e) {
-                    is CancellationException -> throw e
-                    is InternetCheckError -> _messageNews.trySend(R.string.error_network)
-                    is ServerTimeOut -> _messageNews.trySend(R.string.server_time_out)
-                    is NullPointerException -> _messageNews.trySend(R.string.server_response_null)
-                    else -> {
-                        Timber.e("Error desconocido en la peticion $e")
-                        _messageNews.trySend(R.string.error_unknown)
-                    }
+                withContext(Dispatchers.Main) {
+                    numberPager++
+                    if (numberNews == 0) isEnableConcatenate = false
                 }
-            } finally {
-                isConcatenate = false
+            },
+            blockException = {
+                val message =
+                    ExceptionManager.getMessageForException(it, "Exception get concatenate news")
+                _messageNews.trySend(message)
             }
-        }
+        )
     }
 
 }

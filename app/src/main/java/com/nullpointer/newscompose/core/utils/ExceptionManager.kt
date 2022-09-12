@@ -16,13 +16,13 @@ object ExceptionManager {
     fun getMessageForException(exception: Exception,message: String): Int {
         Timber.e("${message}: $exception")
         return if (exception is NullPointerException) {
-            R.string.error_time_out_server
+            R.string.server_response_null
         } else {
             when (exception.message) {
-                NO_NETWORK_ERROR -> R.string.error_conecction
+                NO_NETWORK_ERROR -> R.string.error_network
                 NO_MORE_REQUESTS_ERROR->R.string.error_no_more_requets
                 ERROR_INTERNAL_SERVER -> R.string.error_internal_server
-                else -> R.string.error_unknow
+                else -> R.string.error_unknown
             }
         }
     }

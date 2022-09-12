@@ -8,9 +8,6 @@
     <string name="message_empty_news">Cargando noticias …</string>
     <string name="description_img_new">Imagen de la noticia actual</string>
     <string name="title_web_view_screen" translatable="false">WebView</string>
-    <string name="error_time_out_server">El servidor no response, reintente</string>
-    <string name="error_conecction">se requiere conexion a internet</string>
-    <string name="error_unknow">error descocido</string>
-    <string name="error_no_more_requets">Demasidas solicitudes, reintente despues</string>
+    <string name="error_no_more_requets">Demasiadas solicitudes, reintente después</string>
     <string name="error_internal_server">Hay un error con el servidor</string>
 </resources>
