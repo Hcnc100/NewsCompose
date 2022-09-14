@@ -46,7 +46,7 @@ class NewsViewModel @Inject constructor(
 
     private var isEnableConcatenate by SavableProperty(stateHandle, KEY_IS_ENABLE_CONCATENATE, true)
 
-    var numberPager by SavableComposeState(stateHandle, KEY_NUMBER_PAGER, 1)
+    var numberPager by SavableProperty(stateHandle, KEY_NUMBER_PAGER, 1)
         private set
 
     val listNews = flow<Resource<List<NewsDB>>> {
